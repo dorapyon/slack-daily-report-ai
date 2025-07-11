@@ -20,6 +20,10 @@ from typing import List, Dict, Any
 import requests
 import boto3
 from botocore.exceptions import ClientError
+from dotenv import load_dotenv
+
+# .envファイルを読み込み
+load_dotenv()
 
 
 class SlackMessageFetcher:
@@ -328,6 +332,7 @@ def main():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     slack_user_id = os.getenv("SLACK_USER_ID")
     slack_summary_channel_id = os.getenv("SLACK_SUMMARY_CHANNEL_ID")
+    default_output = os.getenv("DEFAULT_OUTPUT")
     
     # 必須環境変数のチェック
     if not slack_token or not slack_user_id:
@@ -356,10 +361,15 @@ def main():
         # 出力先の決定
         output_choice = args.output
         if output_choice is None:
-            output_choice = get_output_choice()
-            if output_choice is None:  # ユーザーが中断した場合
-                print("処理を終了します")
-                return
+            # デフォルトの出力先が設定されている場合は使用
+            if default_output in ["slack", "file"]:
+                output_choice = default_output
+                print(f"💡 デフォルトの出力先を使用: {output_choice}")
+            else:
+                output_choice = get_output_choice()
+                if output_choice is None:  # ユーザーが中断した場合
+                    print("処理を終了します")
+                    return
         
         # 結果をSlackに投稿またはファイルに保存
         today = datetime.now().strftime("%Y-%m-%d")
