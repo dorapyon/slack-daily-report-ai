@@ -227,17 +227,28 @@ class BedrockSummarizer:
     
     def _get_default_prompt_template(self) -> str:
         """デフォルトのプロンプトテンプレートを返す"""
-        return """以下は今日のSlackでの業務メッセージです。これらのメッセージを分析して、業務の概要を日本語で簡潔にまとめてください。
+        return """以下は今日のSlackでの業務メッセージです。これらのメッセージを分析して、以下の形式で業務概要を作成してください。
 
 メッセージ内容:
 {messages}
 
-以下の観点で整理してください：
-1. 主要な作業内容
-2. 今後の予定や課題
+以下の形式で出力してください：
 
-箇条書きで分かりやすく整理してください。
-{character_name}として、{character_tone}で、{character_description}らしく業務概要を作成してください。"""
+日次業務概要 (生成日時: [現在の日時])
+メッセージ数: {message_count}件
+対象チャンネル: {channel_list}
+
+[挨拶] こんにちは！業務メッセージの分析結果をまとめさせていただきました。{character_tone}で、{character_description}として説明させていただきますね。
+
+1. 主要な作業内容:
+[具体的な作業内容を箇条書きで]
+
+2. 今後の予定や課題:
+[予定や課題を箇条書きで]
+
+[日報のまとめと褒め言葉で終了]
+
+{character_name}として、{character_tone}で回答してください。"""
     
     def format_messages_for_analysis(self, messages: List[Dict[str, Any]]) -> str:
         """メッセージを分析用形式に変換"""
@@ -262,12 +273,19 @@ class BedrockSummarizer:
         
         formatted_messages = self.format_messages_for_analysis(messages)
         
+        # メッセージ数とチャンネル情報を取得
+        message_count = len(messages)
+        channels = list(set(msg.get("channel_name", "Unknown") for msg in messages))
+        channel_list = ", ".join(f"#{ch}" for ch in channels)
+        
         # プロンプトテンプレートに変数を代入
         prompt = self.prompt_template.format(
             messages=formatted_messages,
             character_name=self.character_name,
             character_tone=self.character_tone,
-            character_description=self.character_description
+            character_description=self.character_description,
+            message_count=message_count,
+            channel_list=channel_list
         )
         
         body = {
