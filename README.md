@@ -60,6 +60,33 @@ Slack に投稿したメッセージを自動で読み取り、Amazon Bedrock Cl
 
 ### 4. 環境変数の設定
 
+#### 方法 1: .env ファイルを使用（推奨）
+
+1. `env.sample`を`.env`にコピー:
+
+   ```bash
+   cp env.sample .env
+   ```
+
+2. `.env`ファイルを編集:
+
+   ```bash
+   # Slack設定
+   SLACK_BOT_TOKEN=xoxb-your-bot-token-here
+   SLACK_USER_ID=U1234567890
+   SLACK_SUMMARY_CHANNEL_ID=C1234567890
+
+   # AWS設定
+   AWS_ACCESS_KEY_ID=your-access-key-id
+   AWS_SECRET_ACCESS_KEY=your-secret-access-key
+   AWS_DEFAULT_REGION=us-east-1
+
+   # オプション設定
+   DEFAULT_OUTPUT=file
+   ```
+
+#### 方法 2: 環境変数を直接設定
+
 ```bash
 export SLACK_BOT_TOKEN="xoxb-your-bot-token"
 export SLACK_USER_ID="U1234567890"  # あなたのSlackユーザーID
@@ -68,7 +95,10 @@ export SLACK_USER_ID="U1234567890"  # あなたのSlackユーザーID
 export SLACK_SUMMARY_CHANNEL_ID="C1234567890"  # 日報投稿先チャンネルID
 ```
 
-**注意**: `SLACK_SUMMARY_CHANNEL_ID`が設定されていない場合、Slack 投稿を選択した際に実行時にチャンネル ID の入力を求められます。
+**注意**:
+
+- `SLACK_SUMMARY_CHANNEL_ID`が設定されていない場合、Slack 投稿を選択した際に実行時にチャンネル ID の入力を求められます。
+- `DEFAULT_OUTPUT`を設定すると、コマンドライン引数が指定されていない場合のデフォルトの出力先になります。
 
 ### 5. AWS 認証情報の設定
 
@@ -89,13 +119,16 @@ aws configure
 ### 基本的な使用方法
 
 ```bash
-# 実行時に出力先を選択
+# .envファイルのDEFAULT_OUTPUTを使用
 python slack_daily_report.py
 
 # コマンドライン引数で出力先を指定
 python slack_daily_report.py --output slack    # Slackに投稿
 python slack_daily_report.py --output file     # ファイルに保存
 python slack_daily_report.py -o slack          # 短縮形
+
+# 実行時に出力先を選択（DEFAULT_OUTPUTが未設定の場合）
+python slack_daily_report.py
 ```
 
 ### 実行結果
@@ -106,18 +139,27 @@ python slack_daily_report.py -o slack          # 短縮形
 4. 選択した出力先に結果を保存/投稿
    - **Slack 投稿**: 指定したチャンネルに投稿
    - **ファイル保存**: `daily_summary_YYYY-MM-DD.txt` ファイルに保存
+   - **デフォルト出力**: `.env`ファイルの`DEFAULT_OUTPUT`設定を使用
 
 ### 出力先の選択方法
 
-#### 1. コマンドライン引数で指定
+#### 1. デフォルトの出力先を使用
+
+`.env`ファイルで`DEFAULT_OUTPUT`を設定すると、自動的に使用されます：
+
+```
+💡 デフォルトの出力先を使用: file
+```
+
+#### 2. コマンドライン引数で指定
 
 ```bash
 python slack_daily_report.py --output slack
 ```
 
-#### 2. 実行時に選択
+#### 3. 実行時に選択
 
-引数を指定しない場合、実行時に選択画面が表示されます：
+引数を指定せず、デフォルトの出力先も設定されていない場合、実行時に選択画面が表示されます：
 
 ```
 📤 出力先を選択してください：

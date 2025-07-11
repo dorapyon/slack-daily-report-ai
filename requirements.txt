@@ -1,4 +1,5 @@
 # Python 3.9以上が必要
 requests>=2.32.0
 boto3>=1.35.0
-typing-extensions>=4.12.0 
+typing-extensions>=4.12.0
+python-dotenv>=1.0.0 
