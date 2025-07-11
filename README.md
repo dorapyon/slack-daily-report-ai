@@ -62,28 +62,44 @@ Slack に投稿したメッセージを自動で読み取り、Amazon Bedrock Cl
 
 #### 方法 1: .env ファイルを使用（推奨）
 
-1. `env.sample`を`.env`にコピー:
+1. プロジェクトルートに`.env`ファイルを作成:
 
    ```bash
-   cp env.sample .env
+   touch .env
    ```
 
-2. `.env`ファイルを編集:
+2. `.env`ファイルに以下の内容を記述:
 
    ```bash
+   # ==================================================
+   # 環境変数設定ファイル
+   # ==================================================
+   # 注意: このファイルは .gitignore により Git の対象外です
+   #       機密情報が含まれるため、リポジトリにコミットされません
+   # ==================================================
+
    # Slack設定
    SLACK_BOT_TOKEN=xoxb-your-bot-token-here
    SLACK_USER_ID=U1234567890
    SLACK_SUMMARY_CHANNEL_ID=C1234567890
 
    # AWS設定
+   # 推奨: IAMロール（EC2/ECS）や AWS CLI認証（aws configure）を使用
+   # 以下の設定は、IAMロールやCLI認証が利用できない場合のみ使用してください
    AWS_ACCESS_KEY_ID=your-access-key-id
    AWS_SECRET_ACCESS_KEY=your-secret-access-key
    AWS_DEFAULT_REGION=us-east-1
 
    # オプション設定
+   # デフォルトの出力先（slack または file）
    DEFAULT_OUTPUT=file
    ```
+
+3. 実際の値に置き換え:
+   - `SLACK_BOT_TOKEN`: 実際の Slack Bot Token
+   - `SLACK_USER_ID`: あなたの Slack User ID
+   - `SLACK_SUMMARY_CHANNEL_ID`: 投稿先チャンネル ID
+   - AWS 認証情報: 実際の値（または削除して CLI 認証を使用）
 
 #### 方法 2: 環境変数を直接設定
 

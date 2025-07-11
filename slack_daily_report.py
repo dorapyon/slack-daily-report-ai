@@ -332,7 +332,7 @@ def main():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     slack_user_id = os.getenv("SLACK_USER_ID")
     slack_summary_channel_id = os.getenv("SLACK_SUMMARY_CHANNEL_ID")
-    default_output = os.getenv("DEFAULT_OUTPUT", "file")
+    default_output = os.getenv("DEFAULT_OUTPUT")
     
     # 必須環境変数のチェック
     if not slack_token or not slack_user_id:
