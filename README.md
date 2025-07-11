@@ -13,11 +13,13 @@ Slack に投稿したメッセージを自動で読み取り、Amazon Bedrock Cl
 
 ### Python
 
-- Python 3.7 以上
+- Python 3.9 以上（推奨: Python 3.11 以上）
 - 必要なライブラリ:
   ```bash
-  pip install requests boto3
+  pip install -r requirements.txt
   ```
+
+**注意**: Python 3.7/3.8 はサポートが終了しているため、セキュリティとパフォーマンスの観点から Python 3.9 以上を使用してください。
 
 ### AWS
 
