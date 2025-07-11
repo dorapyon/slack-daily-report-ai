@@ -9,6 +9,8 @@ Slackに投稿したメッセージを自動で読み取り、Amazon Bedrock Cla
 - SLACK_USER_ID: あなたのSlackユーザーID
 - SLACK_SUMMARY_CHANNEL_ID: 日報投稿先チャンネルID（オプション）
 - AWS認証情報: Amazon Bedrock用
+- CHARACTER_NAME, CHARACTER_TONE, CHARACTER_DESCRIPTION: キャラクター設定（オプション）
+- PROMPT_TEMPLATE: カスタムプロンプト（オプション）
 """
 
 import os
@@ -209,6 +211,12 @@ class BedrockSummarizer:
         self.client = boto3.client("bedrock-runtime", region_name="us-east-1")
         self.model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
         
+        # プロンプト設定を環境変数から取得
+        self.prompt_template = os.getenv("PROMPT_TEMPLATE", self._get_default_prompt_template())
+        self.character_name = os.getenv("CHARACTER_NAME", "AI")
+        self.character_tone = os.getenv("CHARACTER_TONE", "丁寧語")
+        self.character_description = os.getenv("CHARACTER_DESCRIPTION", "親しみやすいAIアシスタント")
+        
         # AWS認証確認
         try:
             sts_client = boto3.client("sts", region_name="us-east-1")
@@ -216,6 +224,20 @@ class BedrockSummarizer:
             print(f"🔐 AWS認証確認 - アカウントID: {identity.get('Account')}")
         except Exception as e:
             print(f"⚠️ AWS認証エラー: {e}")
+    
+    def _get_default_prompt_template(self) -> str:
+        """デフォルトのプロンプトテンプレートを返す"""
+        return """以下は今日のSlackでの業務メッセージです。これらのメッセージを分析して、業務の概要を日本語で簡潔にまとめてください。
+
+メッセージ内容:
+{messages}
+
+以下の観点で整理してください：
+1. 主要な作業内容
+2. 今後の予定や課題
+
+箇条書きで分かりやすく整理してください。
+{character_name}として、{character_tone}で、{character_description}らしく業務概要を作成してください。"""
     
     def format_messages_for_analysis(self, messages: List[Dict[str, Any]]) -> str:
         """メッセージを分析用形式に変換"""
@@ -236,21 +258,17 @@ class BedrockSummarizer:
         if not messages:
             return "今日の業務メッセージはありませんでした。"
         
-        print("🤖 AI による業務概要生成中...")
+        print(f"🤖 AI による業務概要生成中... (キャラクター: {self.character_name})")
         
         formatted_messages = self.format_messages_for_analysis(messages)
         
-        prompt = f"""以下は今日のSlackでの業務メッセージです。これらのメッセージを分析して、業務の概要を日本語で簡潔にまとめてください。
-
-メッセージ内容:
-{formatted_messages}
-
-以下の観点で整理してください：
-1. 主要な作業内容
-2. 今後の予定や課題
-
-箇条書きで分かりやすく整理してください。
-最初の挨拶と最後の挨拶は必ず「なのだ」「のだ」「だなのだ」などの口調で回答してください。ずんだもんのような可愛らしい口調で業務概要を作成してください。"""
+        # プロンプトテンプレートに変数を代入
+        prompt = self.prompt_template.format(
+            messages=formatted_messages,
+            character_name=self.character_name,
+            character_tone=self.character_tone,
+            character_description=self.character_description
+        )
         
         body = {
             "anthropic_version": "bedrock-2023-05-31",
@@ -324,15 +342,22 @@ def main():
     # コマンドライン引数を解析
     args = parse_arguments()
     
-    print("=" * 60)
-    print("📊 Slack Daily Report AI 開始")
-    print("=" * 60)
-    
     # 環境変数の取得
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     slack_user_id = os.getenv("SLACK_USER_ID")
     slack_summary_channel_id = os.getenv("SLACK_SUMMARY_CHANNEL_ID")
     default_output = os.getenv("DEFAULT_OUTPUT")
+    
+    # プロンプト設定の環境変数も取得（設定確認用）
+    character_name = os.getenv("CHARACTER_NAME", "AI")
+    character_tone = os.getenv("CHARACTER_TONE", "丁寧語")
+    character_description = os.getenv("CHARACTER_DESCRIPTION", "親しみやすいAIアシスタント")
+    
+    print("=" * 60)
+    print("📊 Slack Daily Report AI 開始")
+    print("=" * 60)
+    print(f"🎭 キャラクター設定: {character_name} ({character_tone}, {character_description})")
+    print("=" * 60)
     
     # 必須環境変数のチェック
     if not slack_token or not slack_user_id:

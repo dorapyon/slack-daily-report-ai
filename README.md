@@ -93,6 +93,14 @@ Slack に投稿したメッセージを自動で読み取り、Amazon Bedrock Cl
    # オプション設定
    # デフォルトの出力先（slack または file）
    DEFAULT_OUTPUT=file
+
+   # プロンプト・キャラクター設定
+   CHARACTER_NAME=AI
+   CHARACTER_TONE=丁寧語
+   CHARACTER_DESCRIPTION=親しみやすいAIアシスタント
+
+   # カスタムプロンプト（省略可）
+   # PROMPT_TEMPLATE=
    ```
 
 3. 実際の値に置き換え:
@@ -100,6 +108,7 @@ Slack に投稿したメッセージを自動で読み取り、Amazon Bedrock Cl
    - `SLACK_USER_ID`: あなたの Slack User ID
    - `SLACK_SUMMARY_CHANNEL_ID`: 投稿先チャンネル ID
    - AWS 認証情報: 実際の値（または削除して CLI 認証を使用）
+   - キャラクター設定: お好みのキャラクターに変更
 
 #### 方法 2: 環境変数を直接設定
 
@@ -235,6 +244,56 @@ Slack 上で以下のいずれかの方法で確認できます：
 1. Slack でチャンネルを開く
 2. チャンネル名をクリック
 3. 下部に表示されるチャンネル ID をコピー
+
+### キャラクター設定のカスタマイズ
+
+#### 基本設定
+
+| 設定項目                | 説明               | 例                                                   |
+| ----------------------- | ------------------ | ---------------------------------------------------- |
+| `CHARACTER_NAME`        | キャラクター名     | "AI", "アシスタント", "ずんだもん"                   |
+| `CHARACTER_TONE`        | 口調・話し方       | "丁寧語", "関西弁", "〜なのだ"                       |
+| `CHARACTER_DESCRIPTION` | キャラクターの特徴 | "親しみやすい AI", "関西弁の AI", "可愛いマスコット" |
+
+#### キャラクター設定例
+
+##### 標準的な AI
+
+```bash
+CHARACTER_NAME=AI
+CHARACTER_TONE=丁寧語
+CHARACTER_DESCRIPTION=親しみやすいAIアシスタント
+```
+
+##### ずんだもん風
+
+```bash
+CHARACTER_NAME=ずんだもん
+CHARACTER_TONE=〜なのだ、〜のだ
+CHARACTER_DESCRIPTION=可愛いマスコットキャラクター
+```
+
+##### 関西弁 AI
+
+```bash
+CHARACTER_NAME=関西AI
+CHARACTER_TONE=関西弁
+CHARACTER_DESCRIPTION=関西弁で話す親しみやすいAI
+```
+
+#### カスタムプロンプト
+
+より詳細なカスタマイズが必要な場合は、`PROMPT_TEMPLATE`で独自のプロンプトを設定できます：
+
+```bash
+PROMPT_TEMPLATE=以下のメッセージを分析して、{character_name}として{character_tone}で業務概要を作成してください。
+
+メッセージ: {messages}
+
+要件:
+- 簡潔にまとめる
+- {character_description}らしく回答する
+```
 
 ## 📝 注意事項
 
