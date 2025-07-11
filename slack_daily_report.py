@@ -212,10 +212,24 @@ class BedrockSummarizer:
         self.model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
         
         # プロンプト設定を環境変数から取得
-        self.prompt_template = os.getenv("PROMPT_TEMPLATE", self._get_default_prompt_template())
         self.character_name = os.getenv("CHARACTER_NAME", "AI")
         self.character_tone = os.getenv("CHARACTER_TONE", "丁寧語")
         self.character_description = os.getenv("CHARACTER_DESCRIPTION", "親しみやすいAIアシスタント")
+        
+        # プロンプトテンプレートの読み込み優先順位:
+        # 1. 環境変数 PROMPT_TEMPLATE（直接指定）
+        # 2. 環境変数 PROMPT_TEMPLATE_FILE（ファイル指定）
+        # 3. 外部ファイル templates/prompt_template.txt
+        # 4. デフォルトプロンプトテンプレート
+        prompt_template_env = os.getenv("PROMPT_TEMPLATE")
+        prompt_template_file = os.getenv("PROMPT_TEMPLATE_FILE", "templates/prompt_template.txt")
+        
+        if prompt_template_env:
+            self.prompt_template = prompt_template_env
+            print("✅ 環境変数からプロンプトテンプレートを読み込みました")
+        else:
+            # 外部ファイルからの読み込みを試行
+            self.prompt_template = self._load_prompt_template_from_file(prompt_template_file)
         
         # AWS認証確認
         try:
@@ -234,21 +248,42 @@ class BedrockSummarizer:
 
 以下の形式で出力してください：
 
-日次業務概要 (生成日時: [現在の日時])
+📈日次業務概要 (生成日時: {current_datetime})
 メッセージ数: {message_count}件
 対象チャンネル: {channel_list}
 
-[挨拶] こんにちは！業務メッセージの分析結果をまとめさせていただきました。{character_tone}で、{character_description}として説明させていただきますね。
-
 1. 主要な作業内容:
-[具体的な作業内容を箇条書きで]
+• [具体的な作業内容を自然な文章で説明。「〜されました」「〜のようです」など丁寧な敬語で]
+• [具体的な作業内容を自然な文章で説明。感想やコメントも含める]
+• [具体的な作業内容を自然な文章で説明。励ましや評価も含める]
 
 2. 今後の予定や課題:
-[予定や課題を箇条書きで]
+• [予定や課題を自然な文章で説明。「〜予定です」「〜する必要があります」など]
+• [予定や課題を自然な文章で説明。応援メッセージも含める]
 
-[日報のまとめと褒め言葉で終了]
+本日もお疲れ様でした！
 
-{character_name}として、{character_tone}で回答してください。"""
+{character_name}として、{character_tone}で回答してください。箇条書きは「•」を使用し、自然で丁寧な文章で説明してください。"""
+    
+    def _load_prompt_template_from_file(self, filename: str) -> str:
+        """外部ファイルからプロンプトテンプレートを読み込む"""
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                template = f.read().strip()
+                if template:
+                    print(f"✅ プロンプトテンプレートを読み込みました: {filename}")
+                    return template
+                else:
+                    print(f"⚠️ プロンプトテンプレートファイルが空です: {filename}")
+                    return self._get_default_prompt_template()
+        except FileNotFoundError:
+            print(f"📝 プロンプトテンプレートファイルが見つかりません: {filename}")
+            print("   デフォルトプロンプトテンプレートを使用します")
+            return self._get_default_prompt_template()
+        except Exception as e:
+            print(f"⚠️ プロンプトテンプレートファイルの読み込みエラー: {e}")
+            print("   デフォルトプロンプトテンプレートを使用します")
+            return self._get_default_prompt_template()
     
     def format_messages_for_analysis(self, messages: List[Dict[str, Any]]) -> str:
         """メッセージを分析用形式に変換"""
@@ -278,6 +313,9 @@ class BedrockSummarizer:
         channels = list(set(msg.get("channel_name", "Unknown") for msg in messages))
         channel_list = ", ".join(f"#{ch}" for ch in channels)
         
+        # 現在の日時を取得
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M')
+        
         # プロンプトテンプレートに変数を代入
         prompt = self.prompt_template.format(
             messages=formatted_messages,
@@ -285,7 +323,8 @@ class BedrockSummarizer:
             character_tone=self.character_tone,
             character_description=self.character_description,
             message_count=message_count,
-            channel_list=channel_list
+            channel_list=channel_list,
+            current_datetime=current_datetime
         )
         
         body = {
@@ -416,11 +455,7 @@ def main():
         
         # 結果をSlackに投稿またはファイルに保存
         today = datetime.now().strftime("%Y-%m-%d")
-        formatted_summary = f"""📊 **日次業務概要** ({today})
-メッセージ数: {len(messages)}件
-生成日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-{summary}"""
+        formatted_summary = summary
         
         if output_choice == "slack":
             if not slack_summary_channel_id:
@@ -485,12 +520,6 @@ def main():
             filename = f"daily_summary_{today}.txt"
             
             with open(filename, "w", encoding="utf-8") as f:
-                f.write(f"日付: {today}\n")
-                f.write(f"メッセージ数: {len(messages)}\n")
-                f.write(f"生成日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write("\n" + "=" * 60 + "\n")
-                f.write("業務概要\n")
-                f.write("=" * 60 + "\n")
                 f.write(summary)
             
             print(f"✅ 概要を {filename} に保存しました")
