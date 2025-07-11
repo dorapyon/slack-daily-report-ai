@@ -2,7 +2,6 @@
 .env
 .env.local
 .env.*.local
-# 注意: env.sampleは除外しない（サンプルファイルとして必要）
 
 # 生成されたレポートファイル
 daily_summary_*.txt
