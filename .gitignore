@@ -1,0 +1,76 @@
+# 機密情報ファイル
+.env
+.env.local
+.env.*.local
+
+# 生成されたレポートファイル
+daily_summary_*.txt
+
+# Python関連
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 仮想環境
+.venv
+venv/
+ENV/
+env/
+.env
+
+# IDE/エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ログファイル
+*.log
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# AWS認証情報
+.aws/
+credentials
+
+# テストカバレッジ
+.coverage
+.pytest_cache/
+.tox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# その他
+.mypy_cache/
+.dmypy.json
+dmypy.json 
